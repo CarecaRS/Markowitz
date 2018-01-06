@@ -1,0 +1,136 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                    Definições                        %
+%                                                      %
+%                                                      %
+% P1Ret eh o retorno medio das amostras da matriz 'P1' %
+% !!! P1Ret precisa ser uma COLUNA, nao uma linha !!!  %
+%                                                      %
+% P1Cov eh a matriz de covariancia da matriz 'P1'      %
+%                                                      %
+%    %    %    %    %    %    %    %    %    %    %    %
+%                                                      %
+% 1. Importa a matriz com todos os rendimentos         %
+% 2. Calcula o retorno medio de cada variavel:         %
+%    >> VarRetMedio = mean(MatrizOriginal)             %
+% 3. O retorno precisa ser transposto                  %
+%    >> VarRetMedio = VarRetMedio'                     %
+% 4. Calcula a matriz de covariancia                   %
+%    >> VarCovariancia = cov(MatrizOriginal)           %
+% 5. Anualiza os retornos medios obtidos (Excel msm) e %
+%    copia para o MatLab                               %
+% 6. Calcula a variancia anual de cada variavel da     %
+%    matriz original                                   %
+% 7. Ajusta as nomenclaturas no script                 %
+% 8. Precisa ter N linhas de                           %
+%    Output(Z,i) = x(N,1);                             %
+%    tantas quantas for a quantidade de variaveis      %
+%    (ativos, Z) do modelo                             %
+% 9. Rodar (eu espero :P)                              %
+%                                                      %
+%    %    %    %    %    %    %    %    %    %    %    %
+%                                                      %
+%  OBS.: o 'tic' do inicio e o 'toc' do final traba-   %
+%  lham juntos,  serve para medir o tempo que demora   %
+%  o processamento todo do modelo.                     %
+%                                                      %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+tic
+
+
+nAssets = numel(P1Ret);
+Aineq = -P1Ret';
+r = 0.0000001:0.000001 : 0.1;
+Aeq = ones(1, nAssets);
+Beq = 1;
+lb = zeros(nAssets,1);
+ub = ones(nAssets,1);
+c = zeros(nAssets,1);
+options = optimset('Algorithm','interior-point-convex');
+options = optimset(options,'Display','iter','TolFun',1e-10);
+x0 = [1 0 0 0 0 0 0 0 0]; %cria uma matriz, o numero de itens DEVE SER IGUAL o numero de variaveis (ativos)
+
+for i = 1:1:5000,
+
+	[x, fval, converge] = quadprog(P1Cov,c,Aineq,-r(i),Aeq,Beq,lb,ub,x0,options);
+
+	if(converge --1)
+
+		pMean = x'*P1Ret;
+		pVar = sqrt(x'*P1Cov*x);
+
+		pMeanAnn = (((1+pMean)^252)-1);
+		pVarAnn = (pVar*sqrt(252));
+		pSharpe = pMeanAnn/pVarAnn;
+
+		Output(1,i) = pMean;
+		Output(2,i) = pMeanAnn;
+		Output(3,i) = pVar;
+		Output(4,i) = pVarAnn;
+		Output(5,i) = pSharpe;
+		Output(6,i) = x(1,1);
+		Output(7,i) = x(2,1);
+		Output(8,i) = x(3,1);
+		Output(9,i) = x(4,1);
+		Output(10,i) = x(5,1);
+		Output(11,i) = x(6,1);
+		Output(12,i) = x(7,1);
+		Output(13,i) = x(8,1);
+		Output(14,i) = x(9,1);
+		Output(15,i) = x(10,1);
+		Output(16,i) = x(11,1);
+		Output(17,i) = x(12,1);
+
+		pMean = 0;
+		pVar = 0;
+		pMeanAnn = 0;
+		pVarAnn = 0;
+		pSharpe = 0;
+
+		continue;
+
+	else
+
+		break;
+
+	end
+
+end
+
+maxpSharpe = max(Output(5,:));
+[row col] = find(maxpSharpe == Output);
+optiDailyRet = Output(1,col);
+optiDailyVar = Output(3,col);
+optiYearlyRet = Output(2,col);
+optiYearlyVar = Output(4,col);
+
+optiAllocation = [ optiDailyRet
+		   optiDailyVar
+                   optiYearlyRet
+                   optiYearlyVar
+                   maxpSharpe
+                   Output(7,col)
+                   Output(8,col)
+                   Output(9,col)
+                   Output(10,col)
+                   Output(11,col)
+                   Output(12,col)
+                   Output(13,col)
+                   Output(14,col)
+                   Output(15,col)
+                   Output(16,col)
+                   Output(17,col)
+                  ]
+
+hold
+plot (Output(4,:), Output(2,:))
+title('Fronteira Eficiente');
+xlabel('Risco');
+ylabel('Retorno');
+plot (optiAllocation(4,1),optiAllocation(3,1),'O');
+print('-dpng', '-r300', 'NOMEDOARQUIVODEIMAGEMASALVAR');
+plot(P1StdAnn,P1RetAnn,'x');
+axis('on');
+
+toc
+
