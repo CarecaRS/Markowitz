@@ -53,9 +53,4 @@ varAtivo6 <- var(historico[, 6])
 # já com a nomenclatura dos ativos:
 var_individuais <- rbind(varAtivo1, varAtivo2, varAtivo3, varAtivo4, varAtivo5, varAtivo6); rownames(var_individuais) <- c(ativos)
 
-# 7o passo - como que calcula o diabo do Markowitz???
-str(var_individuais)
-ls()
-print(var_individuais)
-print(matriz_covariancia)
-print(retorno_anual)
+# 7o passo - cálculo do portfólio
