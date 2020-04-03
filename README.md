@@ -1,4 +1,4 @@
 # Markowitz
-An attempt to do a portfolio selection based in Markowitz's risk-return analysis.
+An early attempt to do a portfolio selection based in Markowitz's risk-return analysis.
 
-This work is just a draft of something great to come.
+I probably won't be working on this in a long time.
